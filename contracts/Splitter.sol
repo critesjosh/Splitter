@@ -6,7 +6,7 @@ contract Splitter {
 	address   public Bob;
 	address   public Carol;
 	address[] public otherMembers;
-	bool active;
+	bool      public active;
 	
 	mapping(address => uint) public balances;
 
@@ -25,6 +25,22 @@ contract Splitter {
 	function Splitter() {
 		owner = msg.sender;
 		active = true;
+	}
+
+	function getOtherMembers()
+		public
+		isActive
+		returns(address[])
+	{
+		return otherMembers;
+	}
+
+	function getBalance(address _address)
+		public
+		isActive
+		returns(uint)
+	{
+		return balances[_address];
 	}
 	
 	function registerBob()
