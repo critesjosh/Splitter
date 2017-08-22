@@ -56,9 +56,10 @@ contract Splitter {
 	    returns(bool success)
 	{
 	    assert(balances[msg.sender] > 0);
+	    uint amount = balances[msg.sender];
 	    balances[msg.sender] = 0;
-	    msg.sender.transfer(balances[msg.sender]);
-	    LogCashOut(msg.sender, balances[msg.sender]);
+	    msg.sender.transfer(amount);
+	    LogCashOut(msg.sender, amount);
 	    return true;
 	}
 
