@@ -2,7 +2,7 @@ pragma solidity ^0.4.6;
 
 contract Splitter {
 
-	address   public owner;
+	address                  public owner;
 	mapping(address => uint) public balances;
 
 	event LogSplit(address to1, address to2, address from, uint amount);
@@ -55,7 +55,7 @@ contract Splitter {
 	    public
 	    returns(bool success)
 	{
-	    require(balances[msg.sender] > 0);
+	    assert(balances[msg.sender] > 0);
 	    balances[msg.sender] = 0;
 	    msg.sender.transfer(balances[msg.sender]);
 	    LogCashOut(msg.sender, balances[msg.sender]);
