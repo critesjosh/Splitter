@@ -3,26 +3,10 @@ pragma solidity ^0.4.6;
 contract Splitter {
 
 	address   public owner;
-	address   public Bob;
-	address   public Carol;
-	address[] public otherMembers;
-	bool      public active;
-	uint             nextPayeeIndex;
-	
 	mapping(address => uint) public balances;
 
-	event LogBobRegistered(address bobsAddress);
-	event LogCarolRegistered(address carolssAddress);
-	event LogOtherMemeberRegistered(address othersAddress);
-	event LogFundsToBobandCarol(uint amount);
-	event LogFundsToOthers(address to, address from, uint amount);
-	event LogPayouts(address to, uint amount);
-
-	modifier isActive()
-	{
-		require(active);
-		_;
-	}
+	event LogSplit(address to1, address to2, address from, uint amount);
+	event LogCashOut(address to, uint amount);
 
 	modifier isOwner()
 	{
@@ -32,143 +16,52 @@ contract Splitter {
 
 	function Splitter() {
 		owner = msg.sender;
-		active = true;
-	}
-
-	function getOtherMembers()
-		public
-		isActive
-		returns(address[])
-	{
-		return otherMembers;
 	}
 
 	function getBalance(address _address)
 		public
-		isActive
 		returns(uint)
 	{
 		return balances[_address];
 	}
-	
-	function registerBob()
-	    public
-	    returns(bool success)
-    {
-        require(Bob == address(0));
-        Bob = msg.sender;
-        LogBobRegistered(msg.sender);
-        return true;
-    }
-    
-    function registerCarol()
-	    public
-	    returns(bool success)
-    {
-        require(Carol == address(0));
-        Carol = msg.sender;
-        LogCarolRegistered(msg.sender);
-        return true;
-    }
-    
-	function registerOtherMember()
-		public
-		isActive
-		returns(bool success)
-	{
-        for(uint i=0; i<otherMembers.length;i++){
-            if(otherMembers[i] == msg.sender) revert();
-        }
-        otherMembers.push(msg.sender);
-        LogOtherMemeberRegistered(msg.sender);
-		return true;
-	}
-	
-	function splitForBobandCarol()
-	    public
-	    payable
-	    isActive
-	    isOwner
-	    returns(bool success)
-	{
-		require(msg.value > 0);
-		require(Bob != address(0) && Carol != address(0));
-		uint amount = msg.value / 2;
-		balances[Bob] += amount;
-		balances[Carol] += amount;
-		LogFundsToBobandCarol(amount);
-		return true;
-	}
-	
-	function payoutBobandCarol()
-	    public
-	    returns(bool success)
-	{
-	    require(Bob == msg.sender || Carol == msg.sender || owner == msg.sender);
-	    require(balances[Bob] > 0);
-	    Bob.transfer(balances[Bob]);
-	    LogPayouts(Bob, balances[Bob]);
-	    balances[Bob] = 0;
-	    Carol.transfer(balances[Carol]);
-	    LogPayouts(Carol, balances[Carol]);
-	    balances[Carol] = 0;
-	    return true;
-	}
 
-	function split()
+	function split(address address1, address address2)
 		public
 		payable
-		isActive
 		returns(bool success)
 	{
 		require(msg.value > 0);
-        require(otherMembers.length > 0);
-		uint amount = msg.value / otherMembers.length;
-        for(uint i = 0;i<otherMembers.length; i++){
-            balances[otherMembers[i]] += amount;
-            LogFundsToOthers(otherMembers[i], msg.sender, amount);
+		bool odd = msg.value % 2 == 1;
+        uint amount;
+        if(odd){
+        	amount = (msg.value - 1) / 2;
+        } else {
+        	amount = msg.value / 2;
         }
+        balances[address1] += amount;
+        balances[address2] += amount;
+        LogSplit(address1, address2, msg.sender, amount);
+        if(odd) {msg.sender.transfer(1);}
 		return true;
 	}
 
 	function kill()
 		public
-		isActive
 		isOwner
 		returns(bool success)
 	{
-		payoutBobandCarol();
-	    payoutAllOthers();
 		selfdestruct(owner);
 		return true;
 	}
-	
-	function deposit()
+
+	function cashMeOut()
 	    public
-	    payable
-	    isActive
 	    returns(bool success)
 	{
-	    split();
-	    return true;      
-	}
-	
-	function payoutAllOthers()
-	    public
-	    isActive
-	    isOwner
-	    returns(bool success)
-	{
-	    require(otherMembers.length > 0);
-	    uint i = nextPayeeIndex;
-	    while(i < otherMembers.length && msg.gas > 200000){
-	    	if(balances[otherMembers[i]] > 0){
-	    		otherMembers[i].transfer(balances[otherMembers[i]]);
-	    		balances[otherMembers[i]] = 0;
-	        	LogPayouts(otherMembers[i], balances[otherMembers[i]]);	
-	    	}
-	    	i++;
-	    }
+	    require(balances[msg.sender] > 0);
+	    balances[msg.sender] = 0;
+	    msg.sender.transfer(balances[msg.sender]);
+	    LogCashOut(msg.sender, balances[msg.sender]);
 	    return true;
 	}
 
