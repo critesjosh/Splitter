@@ -10,6 +10,13 @@ contract Splitter {
 	
 	mapping(address => uint) public balances;
 
+	event LogBobRegistered(address bobsAddress);
+	event LogCarolRegistered(address carolssAddress);
+	event LogOtherMemeberRegistered(address othersAddress);
+	event LogFundsToBobandCarol(uint amount);
+	event LogFundsToOthers(address to, address from, uint amount);
+	event LogPayouts(address to, uint amount);
+
 	modifier isActive()
 	{
 		require(active);
@@ -49,6 +56,7 @@ contract Splitter {
     {
         require(Bob == address(0));
         Bob = msg.sender;
+        LogBobRegistered(msg.sender);
         return true;
     }
     
@@ -58,6 +66,7 @@ contract Splitter {
     {
         require(Carol == address(0));
         Carol = msg.sender;
+        LogCarolRegistered(msg.sender);
         return true;
     }
     
@@ -70,6 +79,7 @@ contract Splitter {
             if(otherMembers[i] == msg.sender) revert();
         }
         otherMembers.push(msg.sender);
+        LogOtherMemeberRegistered(msg.sender);
 		return true;
 	}
 	
@@ -85,6 +95,7 @@ contract Splitter {
 		uint amount = msg.value / 2;
 		balances[Bob] += amount;
 		balances[Carol] += amount;
+		LogFundsToBobandCarol(amount);
 		return true;
 	}
 	
@@ -95,8 +106,10 @@ contract Splitter {
 	    require(Bob == msg.sender || Carol == msg.sender || owner == msg.sender);
 	    require(balances[Bob] > 0);
 	    Bob.transfer(balances[Bob]);
+	    LogPayouts(Bob, balances[Bob]);
 	    balances[Bob] = 0;
 	    Carol.transfer(balances[Carol]);
+	    LogPayouts(Carol, balances[Carol]);
 	    balances[Carol] = 0;
 	    return true;
 	}
@@ -112,6 +125,7 @@ contract Splitter {
 		uint amount = msg.value / otherMembers.length;
         for(uint i = 0;i<otherMembers.length; i++){
             balances[otherMembers[i]] += amount;
+            LogFundsToOthers(otherMembers[i], msg.sender, amount);
         }
 		return true;
 	}
@@ -149,6 +163,7 @@ contract Splitter {
 	        if(balances[otherMembers[i]] > 0){
 	            otherMembers[i].transfer(balances[otherMembers[i]]);
 	            balances[otherMembers[i]] = 0;
+	            LogPayouts(otherMembers[i], balances[otherMembers[i]]);
 	        }
 	    }
 	    return true;
