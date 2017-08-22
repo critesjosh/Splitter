@@ -73,8 +73,10 @@ contract('Splitter', function(accounts) {
     .then(function(balance){
       assert.equal(balance.toString(10), 10000, "account5 balance should have been 10000");
       contract.payoutAllOthers({from: owner});
-      console.log(account4.balance);
-      //return contract.getBalance.call(account4);
+      return contract.getBalance.call(account4);
+    })
+    .then(function(balance){
+      assert.equal(balance.toString(10), 0, "account4 should have been emptied");
     });  
   });
 
