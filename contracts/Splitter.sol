@@ -7,6 +7,7 @@ contract Splitter {
 	address   public Carol;
 	address[] public otherMembers;
 	bool      public active;
+	uint             nextPayeeIndex;
 	
 	mapping(address => uint) public balances;
 
@@ -159,12 +160,14 @@ contract Splitter {
 	    returns(bool success)
 	{
 	    require(otherMembers.length > 0);
-	    for(uint i=0; i<otherMembers.length; i++) {
-	        if(balances[otherMembers[i]] > 0){
-	            otherMembers[i].transfer(balances[otherMembers[i]]);
-	            balances[otherMembers[i]] = 0;
-	            LogPayouts(otherMembers[i], balances[otherMembers[i]]);
-	        }
+	    uint i = nextPayeeIndex;
+	    while(i < otherMembers.length && msg.gas > 200000){
+	    	if(balances[otherMembers[i]] > 0){
+	    		otherMembers[i].transfer(balances[otherMembers[i]]);
+	    		balances[otherMembers[i]] = 0;
+	        	LogPayouts(otherMembers[i], balances[otherMembers[i]]);	
+	    	}
+	    	i++;
 	    }
 	    return true;
 	}
