@@ -7,6 +7,7 @@ contract Splitter {
 
 	event LogSplit(address to1, address to2, address from, uint amount);
 	event LogCashOut(address to, uint amount);
+	event LogKill(uint blocknumber);
 
 	modifier isOwner()
 	{
@@ -32,9 +33,9 @@ contract Splitter {
 	{
 		require(msg.value > 0);
 		bool odd = msg.value % 2 == 1;
-        uint amount;
-        if(odd){
-        	amount = (msg.value - 1) / 2;
+        uint amount = odd ? (msg.value - 1) / 2 : msg.value / 2;
+        
+        	amount = (msg.value - 1) / 2 : ;
         } else {
         	amount = msg.value / 2;
         }
@@ -50,6 +51,7 @@ contract Splitter {
 		isOwner
 		returns(bool success)
 	{
+		LogKill(block.number);
 		selfdestruct(owner);
 		return true;
 	}
@@ -63,6 +65,13 @@ contract Splitter {
 	    msg.sender.transfer(balances[msg.sender]);
 	    LogCashOut(msg.sender, balances[msg.sender]);
 	    return true;
+	}
+
+	function()
+		payable
+		public
+	{
+		balances[this] += msg.value;
 	}
 
 }
