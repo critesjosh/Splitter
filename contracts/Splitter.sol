@@ -72,9 +72,9 @@ contract Splitter {
 	{
 		assert(balances[this] > 0);
 		uint amount = balances[this];
-		owner.transfer(balances[this]);
+		owner.transfer(amount);
 		balances[this] = 0;
-		LogCashOut(owner, balances[this]);
+		LogCashOut(owner, amount);
 		return true;
 	}
 }
