@@ -31,14 +31,9 @@ contract Splitter {
 		payable
 		returns(bool success)
 	{
-		require(msg.value > 0);
+		require(msg.value > 1);
 		bool odd = msg.value % 2 == 1;
         uint amount = odd ? (msg.value - 1) / 2 : msg.value / 2;
-        
-        	amount = (msg.value - 1) / 2 : ;
-        } else {
-        	amount = msg.value / 2;
-        }
         balances[address1] += amount;
         balances[address2] += amount;
         LogSplit(address1, address2, msg.sender, amount);
