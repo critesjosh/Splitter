@@ -3,11 +3,9 @@ pragma solidity ^0.4.6;
 contract Splitter {
 
 	address public  owner;
-	address private address1;
-	address private address2;
 	mapping(address => uint) public balances;
 
-	event LogSplit(uint amount);
+	event LogSplit(address sender, address address1, address address2, uint amount);
 	event LogCashOut(address to, uint amount);
 	event LogDesposit(address from, uint amount);
 	event LogKill(uint blocknumber);
@@ -18,27 +16,23 @@ contract Splitter {
 		_;
 	}
 
-	function Splitter(address _address1, address _address2) {
-		require(_address1 != address(0));
-		require(_address2 != address(0));
-		address1 = _address1;
-		address2 = _address2;
+	function Splitter() {
 		owner = msg.sender;
 	}
 
-	function split()
+	function split(address address1, address address2)
 		public
 		payable
-		isOwner
 		returns(bool success)
 	{
 		require(msg.value > 1);
-		bool odd = msg.value % 2 == 1;
-        uint amount = odd ? (msg.value - 1) / 2 : msg.value / 2;
+		require(address1 != address(0));
+		require(address2 != address(0));
+        uint amount = (msg.value - (msg.value % 2)) / 2;
         balances[address1] += amount;
         balances[address2] += amount;
-        LogSplit(amount);
-        if(odd) {msg.sender.transfer(1);}
+        balances[msg.sender] += msg.value % 2;
+        LogSplit(msg.sender, address1, address2, amount);
 		return true;
 	}
 
@@ -59,10 +53,7 @@ contract Splitter {
 	    assert(balances[msg.sender] > 0);
 	    uint amount = balances[msg.sender];
 	    balances[msg.sender] = 0;
-	    if(!msg.sender.send(amount)){
-	    	balances[msg.sender] = amount;
-	    	throw;
-	    }
+	    msg.sender.transfer(balances[msg.sender]);
 	    LogCashOut(msg.sender, amount);
 	    return true;
 	}
@@ -74,4 +65,14 @@ contract Splitter {
 		LogDesposit(msg.sender, msg.value);
 	}
 
+	function withdraw()
+		public
+		isOwner
+		returns(bool success)
+	{
+		assert(balances[this] > 0);
+		owner.transfer(balances[this]);
+		LogCashOut(owner, balances[this]);
+		return true;
+	}
 }
