@@ -6,8 +6,7 @@ contract Splitter {
 	mapping(address => uint) public balances;
 
 	event LogSplit(address sender, address address1, address address2, uint amount);
-	event LogCashOut(address to, uint amount);
-	event LogDesposit(address from, uint amount);
+	event LogWithdraw(address to, uint amount);
 	event LogKill(uint blocknumber);
 
 	modifier isOwner()
@@ -46,7 +45,7 @@ contract Splitter {
 		return true;
 	}
 
-	function cashMeOut()
+	function withdraw()
 	    public
 	    returns(bool success)
 	{
@@ -54,27 +53,8 @@ contract Splitter {
 	    uint amount = balances[msg.sender];
 	    balances[msg.sender] = 0;
 	    msg.sender.transfer(balances[msg.sender]);
-	    LogCashOut(msg.sender, amount);
+	    LogWithdraw(msg.sender, amount);
 	    return true;
 	}
 
-	function()
-		payable
-		public
-	{
-		LogDesposit(msg.sender, msg.value);
-	}
-
-	function withdraw()
-		public
-		isOwner
-		returns(bool success)
-	{
-		assert(balances[this] > 0);
-		uint amount = balances[this];
-		owner.transfer(amount);
-		balances[this] = 0;
-		LogCashOut(owner, amount);
-		return true;
-	}
 }
